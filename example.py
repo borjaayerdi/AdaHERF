@@ -256,6 +256,14 @@ if __name__ == '__main__':
         uci_path = get_uci_path()
         X, Y = read_uci_dataset(uci_path,i)
         
+        
+        std = np.std(X,axis=0)
+        med = np.mean(X,axis=0)
+        noise = [random.uniform(-0.000005, 0.000005) for p in range(0,X.shape[1])]
+        
+        # Z-score
+        X = (X-med)/(std+noise)
+        
         # Train test split
         # We save x_test and y_test for testing => 20% of the total data.
         x_train, x_test, y_train,y_test = cross_validation.train_test_split(X, Y, test_size=0.2)
