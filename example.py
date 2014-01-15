@@ -17,7 +17,7 @@ def get_uci_path():
     if hn == 'corsair':
         path = '/home/alexandre/Dropbox/Documents/work/borjaayerdi/pythoncode/uci-datasets'
 
-    elif hn == 'ordenador_de_borja':
+    elif hn == 'Ayerdi-PC':
         path = 'uci-datasets'
 
     return path
@@ -47,8 +47,8 @@ def read_uci_dataset(base_dir, dataset_idx=1):
     rows, cols = data.shape
 
     # Delete the first column of labels
-    Y = uci_data[:, 0]
-    X = uci_data[:, 1:rows]
+    Y = data[:, 0]
+    X = data[:, 1:rows]
 
     return X, Y
 
@@ -90,5 +90,5 @@ if __name__ == '__main__':
     print(pca.components_) 
 
     # pca.components_ is the rotation matrix.
-    rotate = X.dot(pca.components_)
+    rotate = data.dot(pca.components_)
 
