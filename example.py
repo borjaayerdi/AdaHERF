@@ -1,17 +1,20 @@
 #!/usr/bin/python
 
 import os
-import numpy as np
-from sklearn.decomposition import PCA
 import time
+import random
+import numpy as np
+
+from scipy.stats import mode
+
+from sklearn import tree
+from sklearn.decomposition import PCA
 from sklearn.cluster import k_means
+from sklearn import cross_validation
+from sklearn.metrics import confusion_matrix
+
 from elm import ELMClassifier, ELMRegressor, SimpleELMClassifier, SimpleELMRegressor
 from random_hidden_layer import SimpleRandomHiddenLayer, RBFRandomHiddenLayer
-from sklearn import cross_validation
-from sklearn import tree
-from sklearn.metrics import confusion_matrix
-import random
-from scipy.stats import mode
 
 
 def get_uci_path():
@@ -62,6 +65,7 @@ def read_uci_dataset(base_dir, dataset_idx=1):
 
     return X, Y
 
+
 def apply_pca(data, labels, n_comps=1):
     """
     Applies PCA to the data
@@ -81,6 +85,7 @@ def apply_pca(data, labels, n_comps=1):
     pca.fit(data)
 
     return pca
+
     
 def clasProbDist(data,labels,dim):
     """
@@ -130,7 +135,6 @@ def clasProbDist(data,labels,dim):
     return ensembleComposition
     
 
-    
 def trainADAHERF(X, Y, dim=35):
     """
     Train AdaHERF algorithm
@@ -221,7 +225,7 @@ def testADAHERF(X, classifiers, inforotar, media):
     ensembleOutput = np.zeros((row,dim))
 
     for i in range(0,dim):
-        ensembleOutput[:,i]= classifiers[i].predict(X.dot(inforotar[i])-media)
+        ensembleOutput[:,i] = classifiers[i].predict(X.dot(inforotar[i])-media)
 
     y_pred = mode(ensembleOutput, axis=1)[0]
     
