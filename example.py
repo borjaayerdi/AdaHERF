@@ -3,6 +3,12 @@
 import os
 import numpy as np
 from sklearn.decomposition import PCA
+from time import time
+from sklearn.cluster import k_means
+from elm import ELMClassifier, ELMRegressor, SimpleELMClassifier, SimpleELMRegressor
+from random_hidden_layer import SimpleRandomHiddenLayer, RBFRandomHiddenLayer
+from sklearn import cross_validation
+from sklearn import tree
 
 def get_uci_path():
     """
@@ -80,15 +86,22 @@ def apply_pca(data, labels, n_comps=1):
 if __name__ == '__main__':
 
     uci_path = get_uci_path()
-
-    data, labels = read_uci_dataset(uci_path)
-
-    n_samps, n_dim = data.shape
-
-    pca = apply_pca(data, labels, n_dim)
-
-    print(pca.components_) 
+	data, labels = read_uci_dataset(uci_path)
+	n_samps, n_dim = data.shape
+	pca = apply_pca(data, labels, n_dim)
+	print(pca.components_) 
 
     # pca.components_ is the rotation matrix.
     rotate = data.dot(pca.components_)
+	
+	# We are going to try ELM
+	x_train, x_test, y_train,y_test = cross_validation.train_test_split(data, labels, test_size=0.2)
+	elmc = SimpleELMClassifier(n_hidden=1000)
+	elmc.fit(x_train, y_train)
+	print elmc.score(x_test, y_test)
+	
+	# Decision tree
+	clf = tree.DecisionTreeClassifier()
+	clf = clf.fit(x_train, y_train)
+	clf.predict(x_test)
 
