@@ -89,7 +89,8 @@ def clasProbDist(data,labels,dim):
     rankscore =[55,34,21,13,8,5,3,2,1,1] # Fibbonacci
     
     # Train test split
-    x_train, x_test, y_train,y_test = cross_validation.train_test_split(data, labels, test_size=0.2)
+    x_train, x_test, \
+    y_train, y_test = cross_validation.train_test_split(data, labels, test_size=0.2)
     
     # Matrix to order
     matrix = []
@@ -130,23 +131,22 @@ def clasProbDist(data,labels,dim):
     
     
 # dim = 35 ponemos para pruebas 2
-def trainADAHERF(X,Y, dim=2):
+def trainADAHERF(X, Y, dim=2):
     """
     Train AdaHERF algorithm
     """
-    
     n_samps, NF = X.shape
-    NF = int(NF)
-    
+
     # Train test split
     x_train, x_test, y_train,y_test = cross_validation.train_test_split(X, Y, test_size=0.2)
     
     # We save x_test and y_test for testing => 20% of the total data.
     # From the 80% of training data we use 30% for ensemble model selection and 70% for real training.
-    x_train, x_trainADAHERF, y_train,y_trainADAHERF = cross_validation.train_test_split(x_train, y_train, test_size=0.7)
+    x_train, x_trainADAHERF, \
+    y_train, y_trainADAHERF = cross_validation.train_test_split(x_train, y_train, test_size=0.7)
     
     # We generate ensemble composition
-    ensembleComposition = clasProbDist(x_train,y_train,dim)
+    ensembleComposition = clasProbDist(x_train, y_train, dim)
     
     # We will use x_trainADAHERF and y_trainADAHERF for adaHERF training
     # And x_test & y_test for testing
@@ -171,9 +171,11 @@ def trainADAHERF(X,Y, dim=2):
         for j in range(0,K):
             numSelecFeatures = int(1 + round((NF-1)*random.random()))
             rp = np.random.permutation(NF)
-            v = []
-            for k in range(0,numSelecFeatures):
-                v.append(rp[k])
+            
+            v = [rp[k] for k in range(0, numSelecFeatures)]
+            #v = []
+            #for k in range(0,numSelecFeatures):
+            #    v.append(rp[k])
             
             FK[j,v] = 1
     
@@ -181,14 +183,14 @@ def trainADAHERF(X,Y, dim=2):
         R = np.zeros((NF,NF))
         for l in range(0,K):
             # Let Xij be the data set X for the features in Fij
-            pos = FK[l,:].nonzero()
-            pos = pos[0]
+            pos = np.nonzero(FK[l,:])[0]
+
+            vpos = [pos[m] for m in range(0, len(pos))]
+            #vpos = []
+            #for m in range(0,len(pos)):
+            #    vpos.append(pos[m])
             
-            vpos = []
-            for m in range(0,len(pos)):
-                vpos.append(pos[m])
-            
-            XXij = X[:,vpos]
+            XXij = X[:, vpos]
             pca = apply_pca(XXij, Y, len(pos))
     
             # pca.components_ is the rotation matrix.
