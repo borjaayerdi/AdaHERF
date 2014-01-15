@@ -11,6 +11,8 @@ from sklearn import cross_validation
 from sklearn import tree
 from sklearn.metrics import confusion_matrix
 import random
+from scipy.stats import mode
+
 
 def get_uci_path():
     """
@@ -127,29 +129,24 @@ def clasProbDist(data,labels,dim):
 
     return ensembleComposition
     
+
     
-    
-    
-# dim = 35 ponemos para pruebas 2
-def trainADAHERF(X, Y, dim=2):
+def trainADAHERF(X, Y, dim=35):
     """
     Train AdaHERF algorithm
     """
     n_samps, NF = X.shape
 
-    # Train test split
-    x_train, x_test, y_train,y_test = cross_validation.train_test_split(X, Y, test_size=0.2)
-    
-    # We save x_test and y_test for testing => 20% of the total data.
     # From the 80% of training data we use 30% for ensemble model selection and 70% for real training.
     x_train, x_trainADAHERF, \
-    y_train, y_trainADAHERF = cross_validation.train_test_split(x_train, y_train, test_size=0.7)
+    y_train, y_trainADAHERF = cross_validation.train_test_split(X, Y, test_size=0.7)
     
     # We generate ensemble composition
     ensembleComposition = clasProbDist(x_train, y_train, dim)
     
-    # We will use x_trainADAHERF and y_trainADAHERF for adaHERF training
-    # And x_test & y_test for testing
+    classifiers = []
+    inforotar = []
+    media = np.mean(x_trainADAHERF,axis=0)
     
     for i in range(0,dim):
         # For each classifier in the ensemble
@@ -171,12 +168,7 @@ def trainADAHERF(X, Y, dim=2):
         for j in range(0,K):
             numSelecFeatures = int(1 + round((NF-1)*random.random()))
             rp = np.random.permutation(NF)
-            
             v = [rp[k] for k in range(0, numSelecFeatures)]
-            #v = []
-            #for k in range(0,numSelecFeatures):
-            #    v.append(rp[k])
-            
             FK[j,v] = 1
     
         
@@ -186,75 +178,88 @@ def trainADAHERF(X, Y, dim=2):
             pos = np.nonzero(FK[l,:])[0]
 
             vpos = [pos[m] for m in range(0, len(pos))]
-            #vpos = []
-            #for m in range(0,len(pos)):
-            #    vpos.append(pos[m])
-            
+   
             XXij = X[:, vpos]
             pca = apply_pca(XXij, Y, len(pos))
-    
-            # pca.components_ is the rotation matrix.
-            #rotate = XXij.dot(pca.components_)
-            
-    
-    
-    
-    # herf es un objeto con todos los clasificadores clf y elmc.
-    # inforotar tiene dentro todas las matrices de rotacion
-    # ensembleComposition es un array con los clasificadores del ensemble por tipo.
-    herf = []
-    inforotar = []
-    
-    return herf, inforotar, ensembleComposition
-    
-    
-    
-    
-    
-#Desde arriba, hasta aqui, lo copias y lo pegas al ipy, a parte.
 
-#esto se pone para cuando este fichero se
-#va a ejecutar como un script, desde fuera
-#Lo que hay aqui debajo lo puedes poner en otro sitio.
+            COEFF = pca.components_
+            
+            for indI in range(0,len(pos)):
+                for indJ in range(0,len(pos)):
+                    R[pos[indI], pos[indJ]] = COEFF[indI,indJ]
+
+                    
+        inforotar.append(R)
+        Xrot = x_trainADAHERF.dot(R) - media
+        
+        if ensembleComposition[i] == 0:
+            #print "DT"
+            dt = tree.DecisionTreeClassifier()
+            dt = dt.fit(Xrot, y_trainADAHERF)
+            classifiers.append(dt)
+            
+        if ensembleComposition[i] == 1:
+            #print "ELM"
+            hiddenN = 1000
+            if len(y_trainADAHERF)/3 < hiddenN:
+                hiddenN = len(y_trainADAHERF)/3
+                
+            elm = SimpleELMClassifier(n_hidden=hiddenN)
+            elm.fit(Xrot, y_trainADAHERF)
+            classifiers.append(elm)
+
+    return classifiers, inforotar, media
+
+
+def testADAHERF(X, classifiers, inforotar, media):   
+    """
+        Test ADAHERF classifier
+    """
+    
+    dim = len(classifiers)
+    row, col = X.shape
+    ensembleOutput = np.zeros((row,dim))
+
+    for i in range(0,dim):
+        ensembleOutput[:,i]= classifiers[i].predict(X.dot(inforotar[i])-media)
+
+    y_pred = mode(ensembleOutput, axis=1)[0]
+    
+    return y_pred
+    
 if __name__ == '__main__':
 
-    uci_path = get_uci_path()
-    X, Y = read_uci_dataset(uci_path)
-    herf, inforotar, ensembleComposition = trainADAHERF(X,Y)
 
-    
-    x_train = X
-    y_train = Y
-    x_test = X
-    y_test = Y
-    
-    # Decision tree
-    start = time.time()
-    clf = tree.DecisionTreeClassifier()
-    clf = clf.fit(x_train, y_train)
-    # We get the predicted classes
-    #clf.predict(x_test)
-    end = time.time()
-    print "DT accuracy"
-    print clf.score(x_test, y_test)
-    print "DT time"
-    print end - start
-    
-    # We are going to try ELM
-    start = time.time()
-    hiddenN = 1000
-    if len(y_train)/3 < hiddenN:
-        hiddenN = len(y_train)/3
+    # 1. Balance
+    # 2. Breast-can
+    # 3. Diabetes
+    # 4. Ecoli
+    # 5. Iris
+    # 6. Liver
+    # 7. Sonar
+    # 8. Soybean
+    # 9. Spambase
+    # 10. Waveform
+    # 11. Wine
+    # 12. Digit
+    # 13. Hayes
+    # 14. Monk1
+    # 15. Monk2
+    # 16. Monk3
+
+    for i in range(1,17):
+
+        uci_path = get_uci_path()
+        X, Y = read_uci_dataset(uci_path,i)
         
-    elmc = SimpleELMClassifier(n_hidden=hiddenN)
-    elmc.fit(x_train, y_train)
-    end = time.time()
-    print "ELM accuracy"
-    # We get the predicted classes
-    #elmc.predict(x_test)
-    print elmc.score(x_test, y_test)
-    print "ELM time"
-    print end - start
-	
-
-    
+        # Train test split
+        # We save x_test and y_test for testing => 20% of the total data.
+        x_train, x_test, y_train,y_test = cross_validation.train_test_split(X, Y, test_size=0.2)
+        
+        classifiers, inforotar, media = trainADAHERF(x_train,y_train)
+        
+        # For testing x_test & y_test
+        y_pred = testADAHERF(x_test, classifiers, inforotar, media)
+        
+        cm = confusion_matrix(y_test, y_pred)
+        print "BD: ",i,"=>",float(cm.trace())/cm.sum()
