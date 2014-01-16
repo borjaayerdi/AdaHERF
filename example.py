@@ -33,6 +33,9 @@ def get_uci_path():
     elif hn == 'Ayerdi-PC':
         path = 'uci-datasets'
 
+    elif hn == 'ayerdi':
+        path = 'uci-datasets'
+
     return path
 
 
