@@ -70,35 +70,6 @@ class AdaHERF(X, Y):
         """
         return self.elm_classifier_.decision_function(X)
 
-    def fit(self, X, y):
-        """
-        Fit the model using X, y as training data.
-
-        Parameters
-        ----------
-        X : {array-like, sparse matrix} of shape [n_samples, n_features]
-            Training vectors, where n_samples is the number of samples
-            and n_features is the number of features.
-
-        y : array-like of shape [n_samples, n_outputs]
-            Target values (class labels in classification, real numbers in
-            regression)
-
-        Returns
-        -------
-        self : object
-
-            Returns an instance of self.
-        """
-        rhl = SimpleRandomHiddenLayer(n_hidden=self.n_hidden,
-                                      activation_func=self.activation_func,
-                                      activation_args=self.activation_args,
-                                      random_state=self.random_state)
-
-        self.elm_classifier_ = ELMClassifier(hidden_layer=rhl)
-        self.elm_classifier_.fit(X, y)
-
-        return self
 
     def predict(self, X):
         """
@@ -121,18 +92,18 @@ class AdaHERF(X, Y):
         
     def apply_pca(data, labels, n_comps=1):
         """
-    Applies PCA to the data
+        Applies PCA to the data
 
-    :param data: ndarray
-    A MxN array with M samples of dimension N
+        :param data: ndarray
+        A MxN array with M samples of dimension N
 
-    :param labels: ndarray or list
-    A 1xN array with the class labels of each sample
-    of data
+        :param labels: ndarray or list
+        A 1xN array with the class labels of each sample
+        of data
 
-    :return: sklearn.decomposition.PCA
+        :return: sklearn.decomposition.PCA
 
-    """
+        """
         # PCA
         pca = PCA(n_components=n_comps, whiten=False, copy=True)
         pca.fit(data)
@@ -142,8 +113,8 @@ class AdaHERF(X, Y):
         
     def clasProbDist(data,labels,dim):
         """
-    Will return a vector with the composition, type of classifiers, of the ensemble.
-    """
+        Will return a vector with the composition, type of classifiers, of the ensemble.
+        """
         
         rankscore =[55,34,21,13,8,5,3,2,1,1] # Fibbonacci
         
@@ -188,25 +159,25 @@ class AdaHERF(X, Y):
         
 
     def fit(self, X, Y):
-          """
-          Fit the model using X, y as training data.
-          
-          Parameters
-          ----------
-          X : {array-like, sparse matrix} of shape [n_samples, n_features]
-          Training vectors, where n_samples is the number of samples
-          and n_features is the number of features.
-          
-          y : array-like of shape [n_samples, n_outputs]
-          Target values (class labels in classification, real numbers in
-          regression)
-          
-          Returns
-          -------
-          self : object
-          
-          Returns an instance of self.
-          """
+        """
+        Fit the model using X, y as training data.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape [n_samples, n_features]
+        Training vectors, where n_samples is the number of samples
+        and n_features is the number of features.
+
+        y : array-like of shape [n_samples, n_outputs]
+        Target values (class labels in classification, real numbers in
+        regression)
+ 
+        Returns
+        -------
+        self : object
+
+        Returns an instance of self.
+        """
         n_samps, NF = X.shape
 
         # From the 80% of training data we use 30% for ensemble model selection and 70% for real training.
@@ -288,8 +259,8 @@ class AdaHERF(X, Y):
 
     def testADAHERF(X, classifiers, inforotar, media):
         """
-    Test ADAHERF classifier
-    """
+        Test ADAHERF classifier
+        """
         
         dim = len(classifiers)
         row, col = X.shape
