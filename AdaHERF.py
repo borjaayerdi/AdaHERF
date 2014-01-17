@@ -50,7 +50,6 @@ class AdaHERF(X, Y):
         self._inforotar = []
         self._media = None
 
-
     def _apply_pca(data, labels, n_comps=1):
         """
         Applies PCA to the data
@@ -116,7 +115,6 @@ class AdaHERF(X, Y):
             ensembleComposition.append(selectedClass)
 
         return ensembleComposition
-        
 
     def fit(self, X, Y):
         """
@@ -208,7 +206,6 @@ class AdaHERF(X, Y):
                 self._classifiers.append(elm)
 
         return self
-
 
     def predict(self, X):
         """
