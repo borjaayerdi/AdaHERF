@@ -50,6 +50,7 @@ class AdaHERF(object):
         self._media = None
         self._scaler = StandardScaler()
 
+    @staticmethod
     def _apply_pca(data, labels, n_comps=1):
         """
         Applies PCA to the data
@@ -70,7 +71,7 @@ class AdaHERF(object):
 
         return pca
 
-    def _clasProbDist(data,labels,dim):
+    def _clasProbDist(self,data,labels):
         """
         Will return a vector with the composition, type of classifiers, of the ensemble.
         """
@@ -109,7 +110,7 @@ class AdaHERF(object):
             probDist.extend(np.tile(a, rankscore[i]))
             
         ensembleComposition = []
-        for j in range(0,dim):
+        for j in range(0,self._n_classifiers):
             randInd = random.randint(0, len(probDist)-1)
             selectedClass = probDist[randInd]
             ensembleComposition.append(selectedClass)
@@ -145,7 +146,7 @@ class AdaHERF(object):
         y_train, y_trainADAHERF = cross_validation.train_test_split(X, Y, test_size=0.7)
         
         # We generate ensemble composition
-        ensembleComposition = self._clasProbDist(x_train, y_train, self._n_classifiers)
+        ensembleComposition = self._clasProbDist(x_train, y_train)
         
         for i in range(0,self._n_classifiers):
             # For each classifier in the ensemble
@@ -187,7 +188,7 @@ class AdaHERF(object):
 
                         
             self._inforotar.append(R)
-            Xrot = x_trainADAHERF.dot(R) - self._media
+            Xrot = x_trainADAHERF.dot(R)
             
             if ensembleComposition[i] == 0:
                 #print "DT"
@@ -225,7 +226,7 @@ class AdaHERF(object):
 
         for i in range(0,dim):
             xrot_z = self._scaler.transform(X.dot(self._inforotar[i]))
-            ensemble_output[:,i] = classifiers[i].predict(xrot_z)
+            ensemble_output[:,i] = self._classifiers[i].predict(xrot_z)
 
         y_pred = mode(ensemble_output, axis=1)[0]
         
