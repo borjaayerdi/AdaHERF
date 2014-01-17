@@ -139,13 +139,13 @@ class AdaHERF(object):
         """
         n_samps, NF = X.shape
 
-        #X = self._scaler.fit_transform(X)
+        Xz = self._scaler.fit_transform(X)
         #self._scaler.fit(X)
         #X = self._scaler.transform(X)
 
         # From the 80% of training data we use 30% for ensemble model selection and 70% for real training.
         x_train, x_trainADAHERF, \
-        y_train, y_trainADAHERF = cross_validation.train_test_split(X, Y, test_size=0.7)
+        y_train, y_trainADAHERF = cross_validation.train_test_split(Xz, Y, test_size=0.7)
         
         # We generate ensemble composition
         ensembleComposition = self._clasProbDist(x_train, y_train)
@@ -176,13 +176,13 @@ class AdaHERF(object):
             
             R = np.zeros((NF,NF))
             for l in range(0,K):
-                # Let Xij be the data set X for the features in Fij
+                # Let Xzij be the data set X for the features in Fij
                 pos = np.nonzero(FK[l,:])[0]
 
                 vpos = [pos[m] for m in range(0, len(pos))]
        
-                XXij = X[:, vpos]
-                pca = self._apply_pca(XXij, Y, len(pos))
+                Xzij = Xz[:, vpos]
+                pca = self._apply_pca(Xzij, Y, len(pos))
 
                 for indI in range(0,len(pos)):
                     for indJ in range(0,len(pos)):
@@ -227,7 +227,7 @@ class AdaHERF(object):
         ensemble_output = np.zeros((len(X),dim))
 
         for i in range(0,dim):
-            #xrot_z = self._scaler.transform(X.dot(self._inforotar[i]))
+            xrot_z = self._scaler.transform(X.dot(self._inforotar[i]))
             xrot_z = X.dot(self._inforotar[i])
             ensemble_output[:,i] = self._classifiers[i].predict(xrot_z)
 
