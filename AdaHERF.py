@@ -35,7 +35,7 @@ from sklearn.metrics import confusion_matrix
 from elm import ELMClassifier, ELMRegressor, SimpleELMClassifier, SimpleELMRegressor
 from random_hidden_layer import SimpleRandomHiddenLayer, RBFRandomHiddenLayer
 
-__all__ = ["adaHERF"]
+__all__ = ["AdaHERF"]
 
 
 class AdaHERF(X, Y):
