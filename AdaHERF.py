@@ -145,7 +145,7 @@ class AdaHERF(object):
         y_train, y_trainADAHERF = cross_validation.train_test_split(X, Y, test_size=0.7)
         
         # We generate ensemble composition
-        ensembleComposition = self._clasProbDist(x_train, y_train, dim)
+        ensembleComposition = self._clasProbDist(x_train, y_train, self._n_classifiers)
         
         for i in range(0,dim):
             # For each classifier in the ensemble
