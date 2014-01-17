@@ -205,7 +205,7 @@ class AdaHERF(X, Y):
 
                         
             self._inforotar.append(R)
-            Xrot = x_trainADAHERF.dot(R) - media
+            Xrot = x_trainADAHERF.dot(R) - self._media
             
             if ensembleComposition[i] == 0:
                 #print "DT"
