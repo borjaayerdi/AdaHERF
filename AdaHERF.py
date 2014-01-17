@@ -147,7 +147,7 @@ class AdaHERF(object):
         # We generate ensemble composition
         ensembleComposition = self._clasProbDist(x_train, y_train, self._n_classifiers)
         
-        for i in range(0,dim):
+        for i in range(0,self._n_classifiers):
             # For each classifier in the ensemble
             # Given:
             # X: the objects in the training data set (an N x n matrix)
