@@ -50,22 +50,6 @@ class AdaHERF(X, Y):
         self._inforotar = []
         self._media = None
 
-    def decision_function(self, X):
-        """
-        This function return the decision function values related to each
-        class on an array of test vectors X.
-
-        Parameters
-        ----------
-        X : array-like of shape [n_samples, n_features]
-
-        Returns
-        -------
-        C : array of shape [n_samples, n_classes] or [n_samples,]
-            Decision function values related to each class, per sample.
-            In the two-class case, the shape is [n_samples,]
-        """
-        return self.elm_classifier_.decision_function(X)
 
     def _apply_pca(data, labels, n_comps=1):
         """
