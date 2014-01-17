@@ -187,10 +187,26 @@ class AdaHERF(X, Y):
         return ensembleComposition
         
 
-    def trainADAHERF(X, Y, dim=35):
-        """
-    Train AdaHERF algorithm
-    """
+    def fit(self, X, Y):
+          """
+          Fit the model using X, y as training data.
+          
+          Parameters
+          ----------
+          X : {array-like, sparse matrix} of shape [n_samples, n_features]
+          Training vectors, where n_samples is the number of samples
+          and n_features is the number of features.
+          
+          y : array-like of shape [n_samples, n_outputs]
+          Target values (class labels in classification, real numbers in
+          regression)
+          
+          Returns
+          -------
+          self : object
+          
+          Returns an instance of self.
+          """
         n_samps, NF = X.shape
 
         # From the 80% of training data we use 30% for ensemble model selection and 70% for real training.
@@ -264,7 +280,10 @@ class AdaHERF(X, Y):
                 elm.fit(Xrot, y_trainADAHERF)
                 classifiers.append(elm)
 
-        return classifiers, inforotar, media
+        self._classifiers = classifiers
+        self._inforotar = inforotar
+        self._media = media
+        return self
 
 
     def testADAHERF(X, classifiers, inforotar, media):
