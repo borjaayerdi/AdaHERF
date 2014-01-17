@@ -147,8 +147,6 @@ class AdaHERF(object):
         # We generate ensemble composition
         ensembleComposition = self._clasProbDist(x_train, y_train, dim)
         
-        #self._media = np.mean(x_trainADAHERF,axis=0)
-        
         for i in range(0,dim):
             # For each classifier in the ensemble
             # Given:
