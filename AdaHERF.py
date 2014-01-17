@@ -1,4 +1,4 @@
-# Author: Borja Ayerdi [borja.ayerdi -at- ehu -dot- com]
+# Authors: Borja Ayerdi [borja.ayerdi -at- ehu -dot- com] || Alexandre [ -at- ehu -dot- com]
 # Copyright(c) 2014
 # License: Simple BSD
 
