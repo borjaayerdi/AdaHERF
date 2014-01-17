@@ -38,7 +38,7 @@ from random_hidden_layer import SimpleRandomHiddenLayer, RBFRandomHiddenLayer
 __all__ = ["AdaHERF"]
 
 
-class AdaHERF(X, Y):
+class AdaHERF(object):
     """
     AdaHERF
     """
