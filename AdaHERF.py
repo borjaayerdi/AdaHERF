@@ -46,6 +46,10 @@ class AdaHERF(X, Y):
     def __init__(self, n_classifiers=35):
 
         self._n_classifiers = n_classifiers
+        self._classifiers = []
+        self._inforotar = []
+        self._media = None
+        
 
 
 
