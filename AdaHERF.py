@@ -37,26 +37,17 @@ from random_hidden_layer import SimpleRandomHiddenLayer, RBFRandomHiddenLayer
 
 __all__ = ["adaHERF"]
 
-# adaHERF
-class adaHERF(X, Y):
+
+class AdaHERF(X, Y):
     """
-    adaHERF
+    AdaHERF
     """
 
-    def __init__(self, n_hidden=20,
-                 activation_func='tanh', activation_args=None,
-                 random_state=None):
+    def __init__(self, n_classifiers=35):
 
-        self.n_hidden = n_hidden
-        self.activation_func = activation_func
-        self.activation_args = activation_args
-        self.random_state = random_state
+        self._n_classifiers = n_classifiers
 
-        self.elm_classifier_ = None
 
-    @property
-    def classes_(self):
-        return self.elm_classifier_.classes_
 
     def decision_function(self, X):
         """
