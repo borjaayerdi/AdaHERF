@@ -139,7 +139,9 @@ class AdaHERF(object):
         """
         n_samps, NF = X.shape
 
-        self._scaler.fit(X)
+        #X = self._scaler.fit_transform(X)
+        #self._scaler.fit(X)
+        #X = self._scaler.transform(X)
 
         # From the 80% of training data we use 30% for ensemble model selection and 70% for real training.
         x_train, x_trainADAHERF, \
@@ -222,10 +224,11 @@ class AdaHERF(object):
             Predicted values.
         """
         dim = len(self._classifiers)
-        ensemble_ouput = np.zeros_like(X)
+        ensemble_output = np.zeros((len(X),dim))
 
         for i in range(0,dim):
-            xrot_z = self._scaler.transform(X.dot(self._inforotar[i]))
+            #xrot_z = self._scaler.transform(X.dot(self._inforotar[i]))
+            xrot_z = X.dot(self._inforotar[i])
             ensemble_output[:,i] = self._classifiers[i].predict(xrot_z)
 
         y_pred = mode(ensemble_output, axis=1)[0]
