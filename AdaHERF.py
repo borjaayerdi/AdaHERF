@@ -29,7 +29,7 @@ from scipy.stats import mode
 from sklearn import tree
 from sklearn import cross_validation
 from sklearn.decomposition import PCA
-from sklean.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler
 
 from elm import SimpleELMClassifier
 
