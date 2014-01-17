@@ -49,9 +49,6 @@ class AdaHERF(X, Y):
         self._classifiers = []
         self._inforotar = []
         self._media = None
-        
-
-
 
     def decision_function(self, X):
         """
@@ -70,27 +67,7 @@ class AdaHERF(X, Y):
         """
         return self.elm_classifier_.decision_function(X)
 
-
-    def predict(self, X):
-        """
-        Predict values using the model
-
-        Parameters
-        ----------
-        X : {array-like, sparse matrix} of shape [n_samples, n_features]
-
-        Returns
-        -------
-        C : numpy array of shape [n_samples, n_outputs]
-            Predicted values.
-        """
-        if (self.elm_classifier_ is None):
-            raise ValueError("SimpleELMClassifier not fitted")
-
-        return self.elm_classifier_.predict(X)
-        
-        
-    def apply_pca(data, labels, n_comps=1):
+    def _apply_pca(data, labels, n_comps=1):
         """
         Applies PCA to the data
 
@@ -110,8 +87,7 @@ class AdaHERF(X, Y):
 
         return pca
 
-        
-    def clasProbDist(data,labels,dim):
+    def _clasProbDist(data,labels,dim):
         """
         Will return a vector with the composition, type of classifiers, of the ensemble.
         """
@@ -185,11 +161,9 @@ class AdaHERF(X, Y):
         y_train, y_trainADAHERF = cross_validation.train_test_split(X, Y, test_size=0.7)
         
         # We generate ensemble composition
-        ensembleComposition = clasProbDist(x_train, y_train, dim)
+        ensembleComposition = self._clasProbDist(x_train, y_train, dim)
         
-        classifiers = []
-        inforotar = []
-        media = np.mean(x_trainADAHERF,axis=0)
+        self._media = np.mean(x_trainADAHERF,axis=0)
         
         for i in range(0,dim):
             # For each classifier in the ensemble
@@ -223,23 +197,21 @@ class AdaHERF(X, Y):
                 vpos = [pos[m] for m in range(0, len(pos))]
        
                 XXij = X[:, vpos]
-                pca = apply_pca(XXij, Y, len(pos))
+                pca = self._apply_pca(XXij, Y, len(pos))
 
-                COEFF = pca.components_
-                
                 for indI in range(0,len(pos)):
                     for indJ in range(0,len(pos)):
-                        R[pos[indI], pos[indJ]] = COEFF[indI,indJ]
+                        R[pos[indI], pos[indJ]] = pca.components_[indI,indJ]
 
                         
-            inforotar.append(R)
+            self._inforotar.append(R)
             Xrot = x_trainADAHERF.dot(R) - media
             
             if ensembleComposition[i] == 0:
                 #print "DT"
                 dt = tree.DecisionTreeClassifier()
                 dt = dt.fit(Xrot, y_trainADAHERF)
-                classifiers.append(dt)
+                self._classifiers.append(dt)
                 
             if ensembleComposition[i] == 1:
                 #print "ELM"
@@ -249,26 +221,30 @@ class AdaHERF(X, Y):
                     
                 elm = SimpleELMClassifier(n_hidden=hiddenN)
                 elm.fit(Xrot, y_trainADAHERF)
-                classifiers.append(elm)
+                self._classifiers.append(elm)
 
-        self._classifiers = classifiers
-        self._inforotar = inforotar
-        self._media = media
         return self
 
 
-    def testADAHERF(X, classifiers, inforotar, media):
+    def predict(self, X):
         """
-        Test ADAHERF classifier
+        Predict values using the model
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix} of shape [n_samples, n_features]
+
+        Returns
+        -------
+        C : numpy array of shape [n_samples, n_outputs]
+            Predicted values.
         """
-        
-        dim = len(classifiers)
-        row, col = X.shape
-        ensembleOutput = np.zeros((row,dim))
+        dim = len(self._classifiers)
+        ensemble_ouput = np.zeros_like(X)
 
         for i in range(0,dim):
-            ensembleOutput[:,i] = classifiers[i].predict(X.dot(inforotar[i])-media)
+            ensemble_output[:,i] = classifiers[i].predict(X.dot(self._inforotar[i]) - self._media)
 
-        y_pred = mode(ensembleOutput, axis=1)[0]
+        y_pred = mode(ensemble_output, axis=1)[0]
         
         return y_pred
