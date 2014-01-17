@@ -21,20 +21,18 @@ References
 """
 
 import os
-import time
 import random
 import numpy as np
 
 from scipy.stats import mode
 
 from sklearn import tree
-from sklearn.decomposition import PCA
-from sklearn.cluster import k_means
 from sklearn import cross_validation
-from sklearn.metrics import confusion_matrix
+from sklearn.decomposition import PCA
+from sklean.preprocessing import StandardScaler
 
-from elm import ELMClassifier, ELMRegressor, SimpleELMClassifier, SimpleELMRegressor
-from random_hidden_layer import SimpleRandomHiddenLayer, RBFRandomHiddenLayer
+from elm import SimpleELMClassifier
+
 
 __all__ = ["AdaHERF"]
 
@@ -50,6 +48,7 @@ class AdaHERF(object):
         self._classifiers = []
         self._inforotar = []
         self._media = None
+        self._scaler = StandardScaler()
 
     def _apply_pca(data, labels, n_comps=1):
         """
@@ -139,6 +138,8 @@ class AdaHERF(object):
         """
         n_samps, NF = X.shape
 
+        self._scaler.fit(X)
+
         # From the 80% of training data we use 30% for ensemble model selection and 70% for real training.
         x_train, x_trainADAHERF, \
         y_train, y_trainADAHERF = cross_validation.train_test_split(X, Y, test_size=0.7)
@@ -146,7 +147,7 @@ class AdaHERF(object):
         # We generate ensemble composition
         ensembleComposition = self._clasProbDist(x_train, y_train, dim)
         
-        self._media = np.mean(x_trainADAHERF,axis=0)
+        #self._media = np.mean(x_trainADAHERF,axis=0)
         
         for i in range(0,dim):
             # For each classifier in the ensemble
@@ -225,7 +226,8 @@ class AdaHERF(object):
         ensemble_ouput = np.zeros_like(X)
 
         for i in range(0,dim):
-            ensemble_output[:,i] = classifiers[i].predict(X.dot(self._inforotar[i]) - self._media)
+            xrot_z = self._scaler.transform(X.dot(self._inforotar[i]))
+            ensemble_output[:,i] = classifiers[i].predict(xrot_z)
 
         y_pred = mode(ensemble_output, axis=1)[0]
         
