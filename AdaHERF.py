@@ -60,14 +60,13 @@ class AdaHERF(object):
         self._med = []
         self._noise = []
         self._listclassifiers = [
-            DecisionTreeClassifier(),
-            SimpleELMClassifier(),
-            KNeighborsClassifier(3),
-            SVC(kernel="linear", C=0.025),
-            SVC(gamma=2, C=1),
-            RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
-            AdaBoostClassifier(),
-            GaussianNB()]
+            DecisionTreeClassifier,
+            SimpleELMClassifier,
+            KNeighborsClassifier,
+            SVC,
+            RandomForestClassifier,
+            AdaBoostClassifier,
+            GaussianNB]
 
     @staticmethod
     def _apply_pca(data, labels, n_comps=1):
@@ -95,7 +94,8 @@ class AdaHERF(object):
         Will return a vector with the composition, type of classifiers, of the ensemble.
         """
         
-        rankscore =[55,34,21,13,8,5,3,2,1,1] # Fibbonacci
+        #rankscore =[55,34,21,13,8,5,3,2,1,1] # Fibbonacci
+        rankscore = [13,8,5,3,2,1,1] # Fibbonacci
         
         # Train test split
         x_train, x_test, \
@@ -105,6 +105,7 @@ class AdaHERF(object):
         matrix = []
         
         for code, cl in zip(range(0,len(self._listclassifiers)),self._listclassifiers):
+            cl = cl()
             cl.fit(x_train, y_train)
             matrix.append([cl.score(x_test, y_test),code])
         
@@ -205,10 +206,7 @@ class AdaHERF(object):
             self._inforotar.append(R)
             Xrot = x_trainADAHERF.dot(R)
             
-            cl = self._listclassifiers[ensembleComposition[i]]
-            #cl = self._listclassifiers[0]
-            #cl = SimpleELMClassifier()
-            #cl = DecisionTreeClassifier()
+            cl = self._listclassifiers[ensembleComposition[i]]()
             cl.fit(Xrot, y_trainADAHERF)
             self._classifiers.append(cl)
 

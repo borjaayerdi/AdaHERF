@@ -7,6 +7,7 @@ import numpy as np
 
 from sklearn import cross_validation
 from sklearn.metrics import confusion_matrix
+from sklearn.cross_validation import StratifiedKFold
 
 from AdaHERF import AdaHERF
 
@@ -71,20 +72,34 @@ if __name__ == '__main__':
     # 15. Monk2
     # 16. Monk3
 
-    #for i in range(1,17):
-    for i in range(1,2):
+    for i in range(1,17):
+    #for i in range(1,2):
+
         uci_path = get_uci_path()
         X, Y = read_uci_dataset(uci_path,i)
         
-        # Train test split
-        # We save x_test and y_test for testing => 20% of the total data.
-        x_train, x_test, y_train,y_test = cross_validation.train_test_split(X, Y, test_size=0.2)
-      
-        adaherf = AdaHERF()
-        adaherf = adaherf.fit(x_train, y_train)
-
-        # For testing x_test & y_test
-        y_pred = adaherf.predict(x_test)
+        K = 10
+        vAcc = []
+        cv = StratifiedKFold(Y, K)
         
-        cm = confusion_matrix(y_test, y_pred)
-        print "BD: ",i,"=>",float(cm.trace())/cm.sum()
+        for train, test in cv:
+        
+            x_train, x_test, y_train, y_test = X[train,:], X[test,:], Y[train], Y[test]
+            # Train test split
+            # We save x_test and y_test for testing => 20% of the total data.
+            #x_train, x_test, y_train,y_test = cross_validation.train_test_split(X, Y, test_size=0.2)
+          
+            adaherf = AdaHERF()
+            adaherf = adaherf.fit(x_train, y_train)
+
+            # For testing x_test & y_test
+            y_pred = adaherf.predict(x_test)
+            
+            cm = confusion_matrix(y_test, y_pred)
+            acc = float(cm.trace())/cm.sum()
+            vAcc.append(acc)
+            #print "BD: ",i,"=>",acc
+
+        bd_std = np.std(vAcc)
+        bd_acc = np.mean(vAcc)
+        print format(bd_acc*100,'.1f'),'(', format(bd_std*100,'.1f'), ')'
