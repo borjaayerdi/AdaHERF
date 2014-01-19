@@ -102,4 +102,4 @@ if __name__ == '__main__':
 
         bd_std = np.std(vAcc)
         bd_acc = np.mean(vAcc)
-        print format(bd_acc*100,'.1f'), format(bd_std*100,'.1f')
+        print format(bd_acc*100,'.2f'), format(bd_std*100,'.2f')
