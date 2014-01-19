@@ -33,6 +33,12 @@ from sklearn.preprocessing import StandardScaler
 
 from elm import SimpleELMClassifier
 
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.qda import QDA
+
 
 __all__ = ["AdaHERF"]
 
@@ -49,6 +55,9 @@ class AdaHERF(object):
         self._inforotar = []
         self._media = None
         self._scaler = StandardScaler()
+        self._std = []
+        self._med = []
+        self._noise = []
 
     @staticmethod
     def _apply_pca(data, labels, n_comps=1):
@@ -88,7 +97,7 @@ class AdaHERF(object):
         # Train/Test DT == 0
         clf = tree.DecisionTreeClassifier()
         clf = clf.fit(x_train, y_train)
-        matrix.append([clf.score(x_test, y_test),0])
+        matrix.append([clf.score(x_test, y_test),1])
         
         # Train/Test ELM == 1
         hiddenN = 1000
@@ -97,7 +106,37 @@ class AdaHERF(object):
             
         elmc = SimpleELMClassifier(n_hidden=hiddenN)
         elmc.fit(x_train, y_train)
-        matrix.append([elmc.score(x_test, y_test),1])
+        matrix.append([elmc.score(x_test, y_test),2])
+        
+        # K-NN == 3
+        cl = KNeighborsClassifier(3)
+        cl.fit(x_train, y_train)
+        matrix.append([cl.score(x_test, y_test),3])
+        
+        # Linear SVM == 4
+        cl = SVC(kernel="linear", C=0.025)
+        cl.fit(x_train, y_train)
+        matrix.append([cl.score(x_test, y_test),4])
+        
+        # RBF SVM == 5
+        cl = SVC(gamma=2, C=1)
+        cl.fit(x_train, y_train)
+        matrix.append([cl.score(x_test, y_test),5])
+        
+        # Random Forest == 6
+        cl = RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1)
+        cl.fit(x_train, y_train)
+        matrix.append([cl.score(x_test, y_test),6])
+        
+        # AdaBoost == 7
+        cl = AdaBoostClassifier()
+        cl.fit(x_train, y_train)
+        matrix.append([cl.score(x_test, y_test),7])
+        
+        # Naive Bayes == 8
+        cl = GaussianNB()
+        cl.fit(x_train, y_train)
+        matrix.append([cl.score(x_test, y_test),8])
         
         # Sort with the error of the classification
         matrix.sort()
@@ -138,11 +177,15 @@ class AdaHERF(object):
         Returns an instance of self.
         """
         n_samps, NF = X.shape
-
-        Xz = self._scaler.fit_transform(X)
-        #self._scaler.fit(X)
-        #X = self._scaler.transform(X)
-
+        
+        # Compute mean, std and noise for z-score
+        self._std = np.std(X,axis=0)
+        self._med = np.mean(X,axis=0)
+        self._noise = [random.uniform(-0.000005, 0.000005) for p in range(0,X.shape[1])]
+        
+        # Apply Z-score
+        Xz = (X-self._med)/(self._std+self._noise)
+        
         # From the 80% of training data we use 30% for ensemble model selection and 70% for real training.
         x_train, x_trainADAHERF, \
         y_train, y_trainADAHERF = cross_validation.train_test_split(Xz, Y, test_size=0.7)
@@ -192,13 +235,13 @@ class AdaHERF(object):
             self._inforotar.append(R)
             Xrot = x_trainADAHERF.dot(R)
             
-            if ensembleComposition[i] == 0:
+            if ensembleComposition[i] == 1:
                 #print "DT"
                 dt = tree.DecisionTreeClassifier()
                 dt = dt.fit(Xrot, y_trainADAHERF)
                 self._classifiers.append(dt)
                 
-            if ensembleComposition[i] == 1:
+            if ensembleComposition[i] == 2:
                 #print "ELM"
                 hiddenN = 1000
                 if len(y_trainADAHERF)/3 < hiddenN:
@@ -207,6 +250,43 @@ class AdaHERF(object):
                 elm = SimpleELMClassifier(n_hidden=hiddenN)
                 elm.fit(Xrot, y_trainADAHERF)
                 self._classifiers.append(elm)
+            
+            if ensembleComposition[i] == 3:    
+                # K-NN == 3
+                cl = KNeighborsClassifier(3)
+                cl.fit(Xrot, y_trainADAHERF)
+                self._classifiers.append(cl)
+            
+            if ensembleComposition[i] == 4:    
+                # Linear SVM == 4
+                cl = SVC(kernel="linear", C=0.025)
+                cl.fit(Xrot, y_trainADAHERF)
+                self._classifiers.append(cl)
+            
+            if ensembleComposition[i] == 5:    
+                # RBF SVM == 5
+                cl = SVC(gamma=2, C=1)
+                cl.fit(Xrot, y_trainADAHERF)
+                self._classifiers.append(cl)
+            
+            if ensembleComposition[i] == 6:    
+                # Random Forest == 6
+                cl = RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1)
+                cl.fit(Xrot, y_trainADAHERF)
+                self._classifiers.append(cl)
+           
+            if ensembleComposition[i] == 7:     
+                # AdaBoost == 7
+                cl = AdaBoostClassifier()
+                cl.fit(Xrot, y_trainADAHERF)
+                self._classifiers.append(cl)
+           
+            if ensembleComposition[i] == 8:     
+                # Naive Bayes == 8
+                cl = GaussianNB()
+                cl.fit(Xrot, y_trainADAHERF)
+                self._classifiers.append(cl)
+                
 
         return self
 
@@ -225,9 +305,11 @@ class AdaHERF(object):
         """
         dim = len(self._classifiers)
         ensemble_output = np.zeros((len(X),dim))
+        
+        # Z-score
+        X = (X-self._med)/(self._std+self._noise)
 
         for i in range(0,dim):
-            xrot_z = self._scaler.transform(X.dot(self._inforotar[i]))
             xrot_z = X.dot(self._inforotar[i])
             ensemble_output[:,i] = self._classifiers[i].predict(xrot_z)
 

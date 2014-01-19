@@ -17,17 +17,7 @@ def get_uci_path():
 
     :return: string
     """
-    import socket
-    hn = socket.gethostname()
-
-    if hn == 'corsair':
-        path = '/home/alexandre/Dropbox/Documents/work/borjaayerdi/pythoncode/uci-datasets'
-
-    elif hn == 'Ayerdi-PC':
-        path = 'uci-datasets'
-
-    elif hn == 'ayerdi':
-        path = 'uci-datasets'
+    path = 'uci-datasets'
 
     return path
 
