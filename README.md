@@ -1,7 +1,7 @@
 Starting with Python
 ====================
 
-We are going to convert Hybrid Extreme Rotation Forest code from Matlab to Python.
+We are going to convert Adaptative Hybrid Extreme Rotation Forest (AdaHERF) code from Matlab to Python.
 
 References
 ----------
