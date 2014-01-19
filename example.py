@@ -71,8 +71,8 @@ if __name__ == '__main__':
     # 15. Monk2
     # 16. Monk3
 
-    for i in range(1,17):
-
+    #for i in range(1,17):
+    for i in range(1,2):
         uci_path = get_uci_path()
         X, Y = read_uci_dataset(uci_path,i)
         

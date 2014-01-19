@@ -547,7 +547,11 @@ class SimpleELMClassifier(BaseEstimator, ClassifierMixin):
 
             Returns an instance of self.
         """
-        rhl = SimpleRandomHiddenLayer(n_hidden=self.n_hidden,
+        hiddenN = 1000
+        if len(y)/3 < hiddenN:
+            hiddenN = len(y)/3
+            
+        rhl = SimpleRandomHiddenLayer(n_hidden=hiddenN,
                                       activation_func=self.activation_func,
                                       activation_args=self.activation_args,
                                       random_state=self.random_state)
