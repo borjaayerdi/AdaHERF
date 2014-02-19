@@ -33,6 +33,13 @@ from sklearn.preprocessing import StandardScaler
 
 from elm import SimpleELMClassifier
 
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.qda import QDA
+
 
 __all__ = ["AdaHERF"]
 
@@ -49,6 +56,17 @@ class AdaHERF(object):
         self._inforotar = []
         self._media = None
         self._scaler = StandardScaler()
+        self._std = []
+        self._med = []
+        self._noise = []
+        self._listclassifiers = [
+            DecisionTreeClassifier,
+            SimpleELMClassifier,
+            KNeighborsClassifier,
+            SVC,
+            RandomForestClassifier,
+            AdaBoostClassifier,
+            GaussianNB]
 
     @staticmethod
     def _apply_pca(data, labels, n_comps=1):
@@ -76,7 +94,7 @@ class AdaHERF(object):
         Will return a vector with the composition, type of classifiers, of the ensemble.
         """
         
-        rankscore =[55,34,21,13,8,5,3,2,1,1] # Fibbonacci
+        rankscore = [13,8,5,3,2,1,1] # Fibbonacci
         
         # Train test split
         x_train, x_test, \
@@ -85,19 +103,10 @@ class AdaHERF(object):
         # Matrix to order
         matrix = []
         
-        # Train/Test DT == 0
-        clf = tree.DecisionTreeClassifier()
-        clf = clf.fit(x_train, y_train)
-        matrix.append([clf.score(x_test, y_test),0])
-        
-        # Train/Test ELM == 1
-        hiddenN = 1000
-        if len(y_train)/3 < hiddenN:
-            hiddenN = len(y_train)/3
-            
-        elmc = SimpleELMClassifier(n_hidden=hiddenN)
-        elmc.fit(x_train, y_train)
-        matrix.append([elmc.score(x_test, y_test),1])
+        for code, cl in zip(range(0,len(self._listclassifiers)),self._listclassifiers):
+            cl = cl()
+            cl.fit(x_train, y_train)
+            matrix.append([cl.score(x_test, y_test),code])
         
         # Sort with the error of the classification
         matrix.sort()
@@ -108,7 +117,7 @@ class AdaHERF(object):
             a = matrix[i]
             a = a[1]
             probDist.extend(np.tile(a, rankscore[i]))
-            
+        
         ensembleComposition = []
         for j in range(0,self._n_classifiers):
             randInd = random.randint(0, len(probDist)-1)
@@ -138,11 +147,15 @@ class AdaHERF(object):
         Returns an instance of self.
         """
         n_samps, NF = X.shape
-
-        Xz = self._scaler.fit_transform(X)
-        #self._scaler.fit(X)
-        #X = self._scaler.transform(X)
-
+        
+        # Compute mean, std and noise for z-score
+        self._std = np.std(X,axis=0)
+        self._med = np.mean(X,axis=0)
+        self._noise = [random.uniform(-0.000005, 0.000005) for p in range(0,X.shape[1])]
+        
+        # Apply Z-score
+        Xz = (X-self._med)/(self._std+self._noise)
+        
         # From the 80% of training data we use 30% for ensemble model selection and 70% for real training.
         x_train, x_trainADAHERF, \
         y_train, y_trainADAHERF = cross_validation.train_test_split(Xz, Y, test_size=0.7)
@@ -192,21 +205,9 @@ class AdaHERF(object):
             self._inforotar.append(R)
             Xrot = x_trainADAHERF.dot(R)
             
-            if ensembleComposition[i] == 0:
-                #print "DT"
-                dt = tree.DecisionTreeClassifier()
-                dt = dt.fit(Xrot, y_trainADAHERF)
-                self._classifiers.append(dt)
-                
-            if ensembleComposition[i] == 1:
-                #print "ELM"
-                hiddenN = 1000
-                if len(y_trainADAHERF)/3 < hiddenN:
-                    hiddenN = len(y_trainADAHERF)/3
-                    
-                elm = SimpleELMClassifier(n_hidden=hiddenN)
-                elm.fit(Xrot, y_trainADAHERF)
-                self._classifiers.append(elm)
+            cl = self._listclassifiers[ensembleComposition[i]]()
+            cl.fit(Xrot, y_trainADAHERF)
+            self._classifiers.append(cl)
 
         return self
 
@@ -225,9 +226,11 @@ class AdaHERF(object):
         """
         dim = len(self._classifiers)
         ensemble_output = np.zeros((len(X),dim))
+        
+        # Z-score
+        X = (X-self._med)/(self._std+self._noise)
 
         for i in range(0,dim):
-            xrot_z = self._scaler.transform(X.dot(self._inforotar[i]))
             xrot_z = X.dot(self._inforotar[i])
             ensemble_output[:,i] = self._classifiers[i].predict(xrot_z)
 
