@@ -198,8 +198,8 @@ class AdaHERF(object):
                 Xzij = Xz[:, vpos]
                 pca = self._apply_pca(Xzij, Y, len(pos))
 
-                for indI in range(0,len(pos)):
-                    for indJ in range(0,len(pos)):
+                for indI in range(0,len(pca.components_)):
+                    for indJ in range(0,len(pca.components_)):
                         R[pos[indI], pos[indJ]] = pca.components_[indI,indJ]
 
                         
