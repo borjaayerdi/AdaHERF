@@ -35,7 +35,7 @@ from elm import SimpleELMClassifier
 
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
+from sklearn.svm import LinearSVC
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.qda import QDA
@@ -63,7 +63,7 @@ class AdaHERF(object):
             DecisionTreeClassifier,
             SimpleELMClassifier,
             KNeighborsClassifier,
-            SVC,
+            LinearSVC,
             RandomForestClassifier,
             AdaBoostClassifier,
             GaussianNB]
